@@ -1,0 +1,41 @@
+# Maintainer: Luca Weiss <luca@lucaweiss.eu>
+pkgname=lomiri-api
+pkgver=0.2.1
+pkgrel=1
+pkgdesc="API for Lomiri shell integration"
+arch=("any")
+url="https://gitlab.com/ubports/development/core/lomiri-api"
+license=('LGPL3')
+depends=("gtest" "qt5-declarative")
+makedepends=("cmake" "extra-cmake-modules" "gmock" "libqtdbustest" "ninja")
+checkdepends=("dbus")
+source=("https://gitlab.com/ubports/development/core/lomiri-api/-/archive/$pkgver/lomiri-api-$pkgver.tar.gz" "0001-Add-missing-headers-for-GCC13.patch" "qmltestrunner.patch")
+sha512sums=('9eb356d6733a780aabb8e8dde412c0aafca5dd021e1b093f5b369c778da0c0ae933e0a8f527528a85ae989d1856f8a3691117bacda1829716dadf253852ffb96'
+		'08c2b3bd7d583064f60c29accd74d10cad64c221e79b84ec973dd0e31b0bfb180a30f3800c1695686d172198a0a15fdf4ae6860e84413bab2d19e89e693b32f7'
+		'04c316667ed5892c55278b01377d4d9c1a6ae14a330bfa594e5e54371d37441747684ab553799cb5e7804f4c68d181e78caeb8279491b9f5302a4e70095c74af')
+
+prepare() {
+  cd "$srcdir/$pkgname-$pkgver"
+  patch -p1 < "$srcdir/0001-Add-missing-headers-for-GCC13.patch"
+  patch -p1 < "$srcdir/qmltestrunner.patch"
+}
+
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+  cmake -B build -G Ninja \
+	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_INSTALL_LIBDIR=lib \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_BUILD_TYPE=None
+  cmake --build build
+}
+
+check() {
+  cd "$srcdir/$pkgname-$pkgver"
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  DESTDIR="$pkgdir" cmake --install build
+}
